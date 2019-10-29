@@ -1,5 +1,8 @@
 import copy
 import os
+import shutil
+
+import datetime
 import psutil
 
 import time,sys
@@ -57,12 +60,12 @@ def updata():
     else:
 
         # * 驱动器分类
-        time.sleep(5)
+
         for i in range(len(part)):
 
             tmplist = part[i].opts.split(",")
-
-            if tmplist[1] == "fixed":  # 挂载选项数据内读到fixed = 本地设备
+            # print('tmplist',tmplist,len(tmplist)) len(tmplist)>1 and
+            if  len(tmplist)>1 and tmplist[1] == "fixed":  # 挂载选项数据内读到fixed = 本地设备
 
                 tmp_local_number = tmp_local_number + 1
 
@@ -122,6 +125,8 @@ import sys
 print('参数个数为:', len(sys.argv), '个参数。')
 print('参数列表:', str(sys.argv))
 
+
+
 if __name__ == "__main__":
 
     #*初次读取驱动器信息，打印驱动器详细
@@ -135,20 +140,101 @@ if __name__ == "__main__":
     relay = relayop()
     now1state=False
     if 'A' in sys.argv[1]:
-        relay.open(2)
         relay.close(1)
-        time.sleep(60)
+        relay.open(2)
+        # time.sleep(1)
+        # relay.open(1)
+        # now1state = True
+        time.sleep(3)
+        #
+        # relay.close(1)
+        # time.sleep(60)
     else:
         relay.close(1)
         relay.close(2)
 
-
+    errcount=0
+    waitcount=0
     while True:
+        waitcount = waitcount+1
 
-        now_number = updata()
+        # if waitcount>60:
+        #     if 'A' in sys.argv[1]:
+        #         print('60s停顿，重启继电器')
+        #         relay.close(2)
+        #         # relay.close(1)
+        #         #更新磁盘数目
+        #         time.sleep(3)
+        #         before_number =  updata()
+        #         time.sleep(5)
+        #         relay.open(2)
+        #         # relay.close(1)
+        #         # time.sleep(3)
+        #
+        #         # relay.open(1)
+        #         # time.sleep(3)
+        #
+        #         # relay.close(1)
+        #         time.sleep(60)
+        #         waitcount = 0
+
+        try:
+            now_number = updata()
+        except Exception as e:
+            estr = str(e)
+            print('Error:', estr)
+            time.sleep(5)
+            errcount = errcount+1
+            if errcount>6:
+                print('60s停顿，重启继电器')
+                if 'A' in sys.argv[1]:
+                    print('A，重启继电器')
+                    relay.close(2)
+                    time.sleep(3)
+                    before_number = updata()
+                    time.sleep(3)
+                    relay.open(2)
+                    time.sleep(3)
+                else:
+                    print(sys.argv[1],'，重启继电器')
+                    relay.open(2)
+                    time.sleep(3)
+                    before_number = updata()
+                    time.sleep(3)
+                    relay.close(2)
+                    time.sleep(3)
+                # if 'A' in sys.argv[1]:
+                #     relay.close(1)
+                #     relay.open(2)
+                #     # time.sleep(1)
+                #     # relay.open(1)
+                #     now1state = False
+                #     time.sleep(3)
+                #     #
+                #     # relay.close(1)
+                #     # time.sleep(60)
+                # else:
+                #     relay.close(1)
+                #     relay.close(2)
+                #     now1state = False
+                continue
+                # elif 'B' in sys.argv[1]:
+                # break
+            else:
+                # if now1state:
+                #     relay.close(1)
+                #     relay.open(1)
+                #     # now1state = False
+                #     # relay.close(1)
+                # else:
+                #     relay.open(1)
+                #     relay.close(1)
+                    # now1state = True
+                continue
+
 
         if(now_number > before_number):
-
+            waitcount = 0
             print("检测到移动磁盘被插入...")
 
             print_device(now_number)
@@ -161,13 +247,36 @@ if __name__ == "__main__":
 
 
             before_number = now_number                  #刷新数据
-            time.sleep(10)
+            # time.sleep(10)
             # 追加写入到指定文件
             # str = "abcd"
             oppath = os.path.join(dev, 'test.txt')
             print('oppath',oppath)
+            #查询文件是否存在，存在则转存到当前目录下的files文件夹下
+            datetimenowTime = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')  # 现在
+            # begin_date = datetime.datetime.strptime(datetimenowTime, "%Y-%m-%d%H:%M:%S")
+            new_name = "test" + datetimenowTime + ".txt"
+            newpath=''
+            # new_name =
+            if os.path.exists(oppath):
+                #拷贝
+                cmd = os.getcwd()
+                if not os.path.exists(os.path.join(cmd,'files')):
+                    os.mkdir(os.path.join(cmd,'files'))
+                newpath = os.path.join(cmd,'files',new_name)
+                shutil.copyfile(oppath, newpath)
+            else:
+                print('不存在文件',oppath)
+
             oplast_line=''
-            with open(oppath, 'r') as f:  # 打开文件
+
+            while True:
+                if not os.path.exists(newpath):
+                    print('文件不存在等待2秒')
+                    time.sleep(20)
+                else:
+                    break
+            with open(newpath, 'r') as f:  # 打开文件
                 lines = f.readlines()  # 读取所有行
                 first_line = lines[0]  # 取第一行
                 last_line = lines[-1]  # 取最后一行
@@ -185,16 +294,27 @@ if __name__ == "__main__":
             nowtime1 = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
             newlist[1] =nowtime1
             if 'A' in nowdev:
-                newlist[2] = int(newlist[2])+1
+                tmpstr1 = newlist[2].strip().strip(b'\x00'.decode())
+                print('tmpstr1',tmpstr1)
+                newlist[2] = int(tmpstr1)+1
             if 'B' in nowdev:
-                newlist[3] = int(newlist[3])+1
-            num_list_new = [str(x) for x in newlist]
+                tmpstr = newlist[3].strip().strip(b'\x00'.decode())
+                print('tmpstr',tmpstr)
+                newlist[3] = int(tmpstr)+1
+            num_list_new = [str(x).strip().strip(b'\x00'.decode()) for x in newlist]
             newstr='|'.join(num_list_new)
             print('newlist',newlist,newstr)
-            with open(oppath, mode='a+', encoding="utf-8") as w:
-                w.write("\n"+newstr)
+            with open(newpath, mode='a+', encoding="utf-8") as w:
+                w.write("\n"+newstr.strip().strip(b'\x00'.decode()))
+                print('完成写操作',newstr,'操作后：',newstr.strip().strip(b'\x00'.decode()))
+            print('完成写',newpath,'准备拷贝')
+            shutil.copyfile(newpath,oppath)
+            print('拷贝完成1')
+            time.sleep(5)
+            print('拷贝完成2')
             #提出开关
             # relay.open(1)
+
             if now1state:
                 relay.close(1)
                 now1state=False
@@ -203,6 +323,7 @@ if __name__ == "__main__":
                 relay.open(1)
                 now1state = True
                 # relay.close(2)
+            time.sleep(1)
 
         elif(now_number < before_number):
 
