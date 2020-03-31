@@ -41,14 +41,14 @@
   </div>
 
   <div id="content" align="center">
-    <button type = "button" class = "HIGH" id = "Relay1" onclick = Button_Click("Relay1")>1#U盘切换</button>
-    <button type = "button" class = "HIGH" id = "Relay2" onclick = Button_Click("Relay2")>2#U盘切换</button>
-    <button type = "button" class = "HIGH" id = "Relay3" onclick = Button_Click("Relay3")>3#U盘切换</button>
-    <button type = "button" class = "HIGH" id = "Relay4" onclick = Button_Click("Relay4")>3#U盘启动</button>
-    <button type = "button" class = "HIGH" id = "Relay5" onclick = Button_Click("Relay5")>树莓派重启</button>
-    <button type = "button" class = "HIGH" id = "Relay6" onclick = Button_Click("Relay6")>控控重启</button>
-    <button type = "button" class = "HIGH" id = "Relay7" onclick = Button_Click("Relay7")>HDMI重启</button>
-    <button type = "button" class = "HIGH" id = "Relay8" onclick = Button_Click("Relay8")>U盘控制重启</button>
+    <button type = "button" class = "HIGH" id = "Relay1" onclick = Button_Click("1")>1#U盘切换</button>
+    <button type = "button" class = "HIGH" id = "Relay2" onclick = Button_Click("2")>2#U盘切换</button>
+    <button type = "button" class = "HIGH" id = "Relay3" onclick = Button_Click("3")>3#U盘切换</button>
+    <button type = "button" class = "HIGH" id = "Relay4" onclick = Button_Click("4")>3#U盘启动</button>
+    <button type = "button" class = "HIGH" id = "Relay5" onclick = Button_Click("5")>树莓派重启</button>
+    <button type = "button" class = "HIGH" id = "Relay6" onclick = Button_Click("6")>控控重启</button>
+    <button type = "button" class = "HIGH" id = "Relay7" onclick = Button_Click("7")>HDMI重启</button>
+    <button type = "button" class = "HIGH" id = "Relay8" onclick = Button_Click("8")>U盘控制重启</button>
   </div>
   
 </body>
@@ -67,15 +67,15 @@ var Relay_Status = {
   Relay8: 1
 };
 
-function Button_Click(button_num) {
-      
+function Button_Click(button_num1) {
+  var button_num =   "Relay"+button_num1
   var button_id = "#" + button_num;
       
   if(Relay_Status[button_num] == 1) {
     $(button_id).removeClass("HIGH");
     $(button_id).addClass("LOW");
     Relay_Status[button_num] = 0;
-    setTimeout(function(){Button_Click(button_num)},1000);
+    setTimeout(function(){Button_Click(button_num1)},1000);
   }
   else if(Relay_Status[button_num] == 0) {
     $(button_id).removeClass("LOW");
@@ -83,14 +83,8 @@ function Button_Click(button_num) {
     Relay_Status[button_num] = 1;
   }
   
-  $.post('Relay', {Relay1: Relay_Status.Relay1, 
-                  Relay2: Relay_Status.Relay2, 
-                  Relay3: Relay_Status.Relay3, 
-                  Relay4: Relay_Status.Relay4, 
-                  Relay5: Relay_Status.Relay5, 
-                  Relay6: Relay_Status.Relay6, 
-                  Relay7: Relay_Status.Relay7, 
-                  Relay8: Relay_Status.Relay8})
+  $.post('Relay', {Relay: button_num1,
+                  RelayState: Relay_Status[button_num]})
 }
 
 </script>
