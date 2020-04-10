@@ -17,9 +17,13 @@ class relayop():
     def openall(self):
         print('打开所有',self.dll.usb_relay_device_open_all_relay_channel(self.bb))
     def open(self,num):
-        print('打开', self.dll.usb_relay_device_open_one_relay_channel(self.bb, num))
+        flag = self.dll.usb_relay_device_open_one_relay_channel(self.bb, num)
+        print('打开', flag)
+        return flag
     def close(self,num):
-        print('关闭', self.dll.usb_relay_device_close_one_relay_channel(self.bb, num))
+        flag = self.dll.usb_relay_device_close_one_relay_channel(self.bb, num)
+        print('关闭', flag)
+        return flag
 # print('打开',dll.usb_relay_device_open_one_relay_channel(bb,1))
 # for i in range(1,5):
 #     # print('暂停1s')

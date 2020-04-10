@@ -1,3 +1,5 @@
+pip install bottle -i https://mirrors.aliyun.com/pypi/simple/
+pip install requests -i https://mirrors.aliyun.com/pypi/simple/
 # USB Relay Driver For Linux
 
 ![alt text](usbrelay.jpg "USB Relay")

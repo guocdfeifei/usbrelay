@@ -14,15 +14,15 @@ import time
 
 class relayop():
     def __init__(self):
+        self.dll = CDLL("usb_relay_device.dll")
+        print(self.dll.usb_relay_init())
+        self.aa = self.dll.usb_relay_device_enumerate()
+        print('设备清单', self.aa)
         self.getRel()
 
     def getRel(self):
-        self.dll = CDLL("usb_relay_device.dll")
         # lib = cdll.LoadLibrary("./usb_relay_device.lib")
-        print(self.dll.usb_relay_init())
-        aa = self.dll.usb_relay_device_enumerate()
-        print('设备清单', aa)
-        self.bb = self.dll.usb_relay_device_open(aa)
+        self.bb = self.dll.usb_relay_device_open(self.aa)
         print('打开设备', self.bb)
 # status = c_int(0)
 # print('打开设备',dll.usb_relay_device_get_status(aa,byref(status)))
@@ -107,21 +107,33 @@ def index():
 def server_Static(filename):
     return static_file(filename, root='./')
 
+def updateRelay(relay,state):
+    before = GPIO.input(relay)
+    flag=True
+    while flag and before!=state:
+        GPIO.output(relay, int(state))
+        after = GPIO.input(relay)
+        if before!=after:
+            flag=False
+
 @route('/Relay', method="POST")
 def Relay_Control():
   global Relay1,Relay2,Relay3,Relay4,Relay5,Relay6,Relay7,Relay8
-  
-  Relay1 = request.POST.get('Relay1')
-  Relay2 = request.POST.get('Relay2')
-  Relay3 = request.POST.get('Relay3')
-  Relay4 = request.POST.get('Relay4')
-  Relay5 = request.POST.get('Relay5')
-  Relay6 = request.POST.get('Relay6')
-  Relay7 = request.POST.get('Relay7')
-  Relay8 = request.POST.get('Relay8')
-
-  # opRelay(Relay[0], int(Relay1))
-  opRelay(Relay[1], int(Relay2))
+  Relay1 = request.POST.get('Relay')
+  RelayState = request.POST.get('RelayState')
+  # updateRelay(Relay[int(Relay1) - 1], int(RelayState))
+  opRelay(Relay[int(Relay1) - 1], int(RelayState))
+  # Relay1 = request.POST.get('Relay1')
+  # Relay2 = request.POST.get('Relay2')
+  # Relay3 = request.POST.get('Relay3')
+  # Relay4 = request.POST.get('Relay4')
+  # Relay5 = request.POST.get('Relay5')
+  # Relay6 = request.POST.get('Relay6')
+  # Relay7 = request.POST.get('Relay7')
+  # Relay8 = request.POST.get('Relay8')
+  #
+  # # opRelay(Relay[0], int(Relay1))
+  # opRelay(Relay[1], int(Relay2))
   # opRelay(Relay[2], int(Relay3))
   # opRelay(Relay[3], int(Relay4))
   # opRelay(Relay[4], int(Relay5))

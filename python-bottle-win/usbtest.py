@@ -136,7 +136,7 @@ if __name__ == "__main__":
     #*初次读取驱动器信息，打印驱动器详细
     print('121212')
     now_number = 0                  #实时驱动数
-    dev = 'E:'#'G:'
+    dev = 'G:'
     srcurl = dev+'/test.txt'
     mrpan = 'B'
     
@@ -228,11 +228,11 @@ if __name__ == "__main__":
 
             # if now1state:
             url = 'http://127.0.0.1:8080/Relay'
-            data = {'Relay1':'0'}
+            data = {'Relay':'2','RelayState':'0'}
             r =requests.post(url,data)
             time.sleep(1)
             url = 'http://127.0.0.1:8080/Relay'
-            data = {'Relay1':'1'}
+            data = {'Relay':'2','RelayState':'1'}
             r =requests.post(url,data)
             # now1state=False
                 # relay.close(1)
