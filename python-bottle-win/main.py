@@ -62,7 +62,9 @@ class relayop():
 
 # Relay = [2, 3, 25, 14, 15, 18, 23, 24]
 Relay = [1, 2, 3, 4, 5, 6, 7,8]
-
+# Relay = [8,7,6,5,4,3,2,1]
+# Relay = [8,7,6,5,4,3,2,1]
+# Relay = [22, 27, 17, 18, 15, 14, 3,2]
 #All the relay
 Relay1 = 1
 Relay2 = 1

@@ -5,7 +5,8 @@ from bottle import *
 import RPi.GPIO as GPIO
 
 #GPIO Pin
-Relay = [2, 3, 14, 15, 18, 17, 27, 22]
+# Relay = [2, 3, 14, 15, 18, 17, 27, 22]
+Relay = [22, 27, 17, 18, 15, 14, 3,2]
 
 #All the relay
 Relay1 = 1

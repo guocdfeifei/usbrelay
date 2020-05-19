@@ -136,6 +136,12 @@ if __name__ == "__main__":
     #*初次读取驱动器信息，打印驱动器详细
     print('121212')
     now_number = 0                  #实时驱动数
+    now_number = 0  # 实时驱动数
+
+    before_number = updata()  # 更新数据之前的驱动数
+
+    print_device(before_number)
+
     dev = 'G:'
     srcurl = dev+'/test.txt'
     mrpan = 'B'
