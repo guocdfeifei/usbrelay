@@ -11,7 +11,7 @@ from bottle import *
 from ctypes import *
 
 import time
-
+Relay = [1, 2, 3, 4, 5, 6, 7,8]
 class relayop():
     def __init__(self):
         self.dll = CDLL("usb_relay_device.dll")
@@ -32,20 +32,41 @@ class relayop():
     def open(self,num):
         flag = 1
         while flag ==1:
+            print('self.bb',self.bb)
+            self.getStatus()
             flag = self.dll.usb_relay_device_open_one_relay_channel(self.bb, num)
             print('打开', flag)
             if flag==1:
                 self.getRel()
+            else:
+                self.getStatus()
 
         return flag
     def close(self,num):
         flag = 1
         while flag == 1:
+
+            self.getStatus()
             flag = self.dll.usb_relay_device_close_one_relay_channel(self.bb, num)
             print('关闭', flag)
             if flag == 1:
                 self.getRel()
+            else:
+                self.getStatus()
         return flag
+    def getStatus(self):
+        # global Relay
+        # print('Relay',Relay)
+        # for rel in Relay:
+        status = c_int(0)
+        flag= self.dll.usb_relay_device_get_status(self.bb, byref(status))
+        if flag ==0:
+            print('执行前设备状态',status )  # aa, byref(status)
+            print('0status', status.value,'bin',bin(status.value))
+            return bin(status.value)
+        else:
+            print('状态查询失败')
+            return '状态查询失败'
 # print('打开',dll.usb_relay_device_open_one_relay_channel(bb,1))
 # for i in range(1,5):
 #     # print('暂停1s')
@@ -61,7 +82,7 @@ class relayop():
         print('关闭所有',self.dll.usb_relay_device_close_all_relay_channel(self.bb))
 
 # Relay = [2, 3, 25, 14, 15, 18, 23, 24]
-Relay = [1, 2, 3, 4, 5, 6, 7,8]
+
 # Relay = [8,7,6,5,4,3,2,1]
 # Relay = [8,7,6,5,4,3,2,1]
 # Relay = [22, 27, 17, 18, 15, 14, 3,2]
@@ -84,10 +105,12 @@ Relay8 = 1
 #加载继电器
 relay = relayop()
 def opRelay(Relay, state):
+
   if state==0:
     relay.open(Relay)
   else:
     relay.close(Relay)
+
 
 
 @get("/")
@@ -143,7 +166,70 @@ def Relay_Control():
   # opRelay(Relay[6], int(Relay7))
   # opRelay(Relay[7], int(Relay8))
 
-  
+checkFlag=False
+
+def checkmin():
+    result = relay.getStatus()
+    sleepmin = 10
+    findstep = 1
+    rennum = 5
+    renbegin = 0
+    print('result', result, type(result))
+    subStatus = result[2:]
+    print('subStatus', subStatus)
+    while True:
+        global checkFlag
+        checkFlag = True
+        while int(subStatus) != 0:
+            print('有非0状态的继电器')
+            renbegin = renbegin + 1
+            print('忍了', renbegin)
+            time.sleep(findstep)
+            if renbegin > rennum:
+                print('忍够了，要切换为初始状态')
+                i = 0
+                for rel in subStatus[::-1]:
+                    i = i + 1
+                    print(i, 'rel', rel, '准备重置为0状态')
+                    relay.close(i)
+
+            # else:
+            result = relay.getStatus()
+            print('result', result, type(result))
+            subStatus = result[2:]
+            print('subStatus', subStatus)
+        print(sleepmin, '分钟后再检测')
+        time.sleep(sleepmin * 60)
+
+'''
+内网 10分钟检查继电器状态，如果任意一个是吸合状态，1秒钟检测一次，连续五次一直吸合（高电压状态为吸合状态），发送断开吸合指令，保证所有继电器都是断开的
+'''
+@route('/RelayStatus', method="GET")
+def Relay_Status():
+    result=relay.getStatus()
+    print('result',result,type(result))
+    subStatus=result[2:]
+    print('subStatus',subStatus)
+    if not checkFlag:
+        print('后台启动监控')
+
+        t = threading.Thread(target=checkmin, args=())
+        t.setDaemon(True)
+        t.start()
+        print('线程启动了')
+    else:
+        print('检测程序已启动了')
+
+
+    return {'result': result}
+
+
+print('后台启动监控')
+
+t = threading.Thread(target=checkmin, args=())
+t.setDaemon(True)
+t.start()
+print('线程启动了')
 run(host="0.0.0.0", port=8080)
  
 
